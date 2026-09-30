@@ -1,0 +1,8 @@
+{
+  "appId": "mx.mitienda.abarrotes",
+  "appName": "Mi Tienda",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false
+  }
+}

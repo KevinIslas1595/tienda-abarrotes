@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Versión sin esquinas redondeadas y con margen: para íconos "maskable",
+       iPhone y Android, que recortan la forma por su cuenta. -->
+  <rect width="512" height="512" fill="#0f766e"/>
+  <g transform="translate(51.2 51.2) scale(0.8)">
+    <path d="M96 108h64v56a32 32 0 0 1-64 0z" fill="#fbbf24"/>
+    <path d="M160 108h64v56a32 32 0 0 1-64 0z" fill="#ffffff"/>
+    <path d="M224 108h64v56a32 32 0 0 1-64 0z" fill="#fbbf24"/>
+    <path d="M288 108h64v56a32 32 0 0 1-64 0z" fill="#ffffff"/>
+    <path d="M352 108h64v56a32 32 0 0 1-64 0z" fill="#fbbf24"/>
+    <rect x="120" y="236" width="272" height="172" rx="22" fill="#ffffff"/>
+    <g fill="#0f766e">
+      <rect x="144" y="262" width="8" height="120"/>
+      <rect x="160" y="262" width="4" height="120"/>
+      <rect x="172" y="262" width="12" height="120"/>
+      <rect x="192" y="262" width="4" height="120"/>
+      <rect x="204" y="262" width="8" height="120"/>
+      <rect x="220" y="262" width="4" height="120"/>
+      <rect x="232" y="262" width="16" height="120"/>
+      <rect x="256" y="262" width="4" height="120"/>
+      <rect x="268" y="262" width="8" height="120"/>
+      <rect x="284" y="262" width="12" height="120"/>
+      <rect x="304" y="262" width="4" height="120"/>
+      <rect x="316" y="262" width="8" height="120"/>
+      <rect x="332" y="262" width="4" height="120"/>
+      <rect x="344" y="262" width="12" height="120"/>
+      <rect x="364" y="262" width="4" height="120"/>
+    </g>
+  </g>
+</svg>

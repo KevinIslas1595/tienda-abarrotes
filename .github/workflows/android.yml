@@ -1,0 +1,63 @@
+# Arma la app para Android (APK) con Capacitor y la deja para descargar en
+# https://github.com/KevinIslas1595/tienda-abarrotes/releases/latest/download/mi-tienda.apk
+name: App Android
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Armar la página para la app
+        run: npm run build:app
+
+      - name: Crear el proyecto de Android
+        run: |
+          npx cap add android
+          node scripts/android-permisos.mjs
+          sed -i "s/versionCode 1$/versionCode ${{ github.run_number }}/; s/versionName \"1.0\"/versionName \"1.0.${{ github.run_number }}\"/" android/app/build.gradle
+          npx --yes @capacitor/assets@3 generate --android
+          npx cap sync android
+
+      - name: Compilar APK
+        run: |
+          # Firma fija para que las actualizaciones se instalen encima de la versión anterior.
+          mkdir -p ~/.android
+          cp recursos/firma-debug.keystore ~/.android/debug.keystore
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk ../mi-tienda.apk
+
+      - name: Publicar APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view apk >/dev/null 2>&1 || gh release create apk --title "App para Android" --notes "Descarga mi-tienda.apk en tu celular Android y ábrelo para instalar. Se actualiza sola cada vez que cambia la app."
+          gh release upload apk mi-tienda.apk --clobber

@@ -1,0 +1,26 @@
+{
+  "name": "tienda-abarrotes",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Inventario y cobros para tienda de abarrotes: escaneo de códigos de barras, costos, ventas del día y corte de caja.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:emulador": "vite --mode emulador",
+    "build": "vite build",
+    "build:app": "vite build --mode app",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "barcode-detector": "3.2.2",
+    "firebase": "^12.19.0",
+    "zxing-wasm": "3.1.3"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "vite": "^8.3.1",
+    "vite-plugin-pwa": "^1.3.0"
+  }
+}
