@@ -73,7 +73,13 @@ npm run dev:emulador   # en la PC, con el emulador de Firebase (datos de prueba)
 npm run build          # página para GitHub Pages
 ```
 
-Para el emulador: `npx firebase-tools emulators:start --only auth,firestore --project demo-tienda` (necesita Java 21).
+Para el emulador: `npx firebase-tools emulators:start --only auth,firestore --project demo-tienda` (necesita Java 21; Firestore queda en el puerto 8085).
+
+Pruebas automáticas (carpeta `pruebas/`, con Playwright y el emulador corriendo):
+
+- `prueba.mjs`: 35 comprobaciones de punta a punta (cobrar, granel, códigos nuevos, entradas, conteo, cancelaciones, Excel, sin internet).
+- `prueba-escaner.mjs`: el escáner con una cámara falsa que muestra un código (`video-codigo.mjs` crea el video).
+- `prueba-reglas.mjs`: que una cuenta no pueda leer ni escribir la tienda de otra.
 
 Estructura de los datos (cada cuenta tiene su tienda):
 

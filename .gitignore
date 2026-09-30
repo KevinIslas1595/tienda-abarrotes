@@ -2,6 +2,8 @@ node_modules/
 dist/
 android/
 *.log
+*.y4m
+capturas/
 .firebase/
 .DS_Store
 Thumbs.db

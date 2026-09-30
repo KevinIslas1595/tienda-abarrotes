@@ -38,6 +38,7 @@ if (firebaseListo) {
   });
   if (usandoEmulador) {
     connectAuthEmulator(auth, `http://${location.hostname}:9099`, { disableWarnings: true });
-    connectFirestoreEmulator(db, location.hostname, 8080);
+    // 8085 y no 8080: en esta PC el 8080 lo usa Docker (Airflow).
+    connectFirestoreEmulator(db, location.hostname, 8085);
   }
 }
