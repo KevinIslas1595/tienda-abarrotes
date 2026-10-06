@@ -1,5 +1,19 @@
 # Mi Tienda · inventario y cobros para tienda de abarrotes
 
+**[Ver la app en línea](https://kevinislas1595.github.io/tienda-abarrotes/)** · **[Descargar para Android (APK)](https://github.com/KevinIslas1595/tienda-abarrotes/releases/latest/download/mi-tienda.apk)**
+
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-Auth%20%2B%20Firestore-FFCA28?logo=firebase&logoColor=black)
+![PWA](https://img.shields.io/badge/PWA-sin%20internet-5A0FC8?logo=pwa&logoColor=white)
+![Capacitor](https://img.shields.io/badge/Capacitor-Android-119EFF?logo=capacitor&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)
+![Playwright](https://img.shields.io/badge/Pruebas-Playwright-2EAD33?logo=playwright&logoColor=white)
+
+Sistema de punto de venta e inventario hecho para una tienda de abarrotes real en el Estado de México.
+Escanea códigos de barras con la cámara del celular, funciona sin internet y se publica solo
+(página web + app de Android) con GitHub Actions en cada cambio.
+
 App para administrar una tienda de abarrotes desde el celular o la computadora:
 
 - **Cobrar escaneando** el código de barras con la cámara del celular (varios productos seguidos), buscando por nombre o con un lector USB.
@@ -39,8 +53,8 @@ Si algún día se llegara al límite, la app sigue funcionando en el aparato y s
 ### Conectar Firebase (una sola vez)
 
 1. Entra a https://console.firebase.google.com con tu cuenta de Google → **Crear un proyecto** → nombre `tienda-abarrotes` → puedes desactivar Google Analytics → **Crear**.
-2. Menú **Compilación → Authentication → Comenzar** → elige **Correo electrónico/contraseña** → actívalo → **Guardar**.
-3. Menú **Compilación → Firestore Database → Crear base de datos** → edición **Estándar** → ubicación la que sugiera → **Modo de producción** → **Crear**.
+2. Menú **Seguridad → Authentication → Comenzar** → elige **Correo electrónico/contraseña** → actívalo → **Guardar**.
+3. Menú **Bases de datos y almacenamiento → Firestore → Crear base de datos** → edición **Estándar** → ubicación la que sugiera → **Modo de producción** → **Crear**.
 4. En Firestore, pestaña **Reglas** → borra lo que hay → pega el contenido del archivo `firestore.rules` → **Publicar**.
 5. ⚙️ **Configuración del proyecto** → abajo, en «Tus apps», el ícono **`</>`** (Web) → nombre `tienda` → **Registrar app** → copia el bloque `firebaseConfig`.
 6. Pega esos datos en `src/config.js` y sube el cambio a GitHub (o pásaselos a Claude para que lo haga).

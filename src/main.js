@@ -27,7 +27,7 @@ function pantallaSinConfiguracion() {
         <h1>Mi Tienda</h1>
         <p class="login-sub">Falta conectar la base de datos</p>
         <p>La app ya está lista, pero todavía no tiene los datos del proyecto de Firebase donde se guardará tu información.</p>
-        <p class="ayuda">Se pegan en el archivo <code>src/config.js</code>. Las instrucciones están en el archivo <code>LEEME.md</code> del proyecto.</p>
+        <p class="ayuda">Se pegan en el archivo <code>src/config.js</code>. Las instrucciones están en el archivo <code>README.md</code> del proyecto.</p>
       </div>
     </main>`;
 }
