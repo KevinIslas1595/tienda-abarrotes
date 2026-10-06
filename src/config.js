@@ -5,12 +5,12 @@
 // información es tu contraseña y las reglas de seguridad (firestore.rules):
 // cada cuenta solo puede ver y cambiar los datos de su propia tienda.
 export const firebaseConfig = {
-  apiKey: '',
-  authDomain: '',
-  projectId: '',
-  storageBucket: '',
-  messagingSenderId: '',
-  appId: '',
+  apiKey: 'AIzaSyBBnlpkuWqntHyPT95T0kmzurCTRULE-f4',
+  authDomain: 'mi-tienda-6f671.firebaseapp.com',
+  projectId: 'mi-tienda-6f671',
+  storageBucket: 'mi-tienda-6f671.firebasestorage.app',
+  messagingSenderId: '2682939006',
+  appId: '1:2682939006:web:f96d5a6f668e2035005a2f',
 };
 
 // Dónde se descarga la app para Android (la genera GitHub automáticamente).
