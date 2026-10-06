@@ -318,6 +318,7 @@ const ERRORES = {
   'auth/too-many-requests': 'Demasiados intentos. Espera unos minutos y vuelve a probar.',
   'auth/network-request-failed': 'No hay internet. Para entrar necesitas conexión (después ya funciona sin internet).',
   'auth/operation-not-allowed': 'Falta activar «Correo electrónico/contraseña» en Firebase → Authentication.',
+  'auth/configuration-not-found': 'Falta activar Authentication en Firebase (Seguridad → Authentication → Comenzar → Correo electrónico/contraseña).',
   'auth/admin-restricted-operation': 'Crear cuentas nuevas está desactivado en Firebase.',
   'permission-denied': 'Sin permiso para guardar. Revisa que pegaste las reglas de seguridad en Firestore.',
   unavailable: 'Sin conexión. Se guardará cuando vuelva el internet.',
