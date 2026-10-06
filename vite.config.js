@@ -10,7 +10,15 @@ export default defineConfig(({ mode }) => ({
   base: mode === 'production' ? '/tienda-abarrotes/' : '/',
   build: {
     target: 'es2020',
-    chunkSizeWarningLimit: 1200,
+    rollupOptions: {
+      output: {
+        // Firebase va en su propio archivo: casi nunca cambia, así que el
+        // teléfono lo conserva y solo baja lo nuevo de la app al actualizar.
+        manualChunks: (id) => (id.includes('node_modules/@firebase/') || id.includes('node_modules/firebase/') ? 'firebase' : undefined),
+      },
+    },
+    // Firebase (Auth + Firestore con modo sin internet) pesa ~550 KB por sí solo.
+    chunkSizeWarningLimit: 650,
   },
   plugins: [
     VitePWA({
@@ -33,8 +41,16 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,wasm,webmanifest}'],
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        // El lector ZXing (.wasm, ~1 MB) no se baja de entrada: Android ya trae
+        // su propio lector. Solo se descarga (y se guarda) la primera vez que se usa.
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}'],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.endsWith('.wasm'),
+            handler: 'CacheFirst',
+            options: { cacheName: 'lector-codigos', expiration: { maxEntries: 2 } },
+          },
+        ],
         navigateFallback: 'index.html',
       },
     }),

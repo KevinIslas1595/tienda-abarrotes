@@ -1,5 +1,5 @@
-# Cada vez que se sube un cambio a "main", GitHub arma la página y la publica
-# en https://kevinislas1595.github.io/tienda-abarrotes/
+# Cada vez que se sube un cambio a "main", GitHub corre las pruebas y, si todas
+# pasan, arma la página y la publica en https://kevinislas1595.github.io/tienda-abarrotes/
 name: Publicar página
 
 on:
@@ -17,7 +17,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # Reglas de seguridad + 46 comprobaciones de punta a punta con el emulador de Firebase.
+      - run: npm test
+
   construir:
+    needs: pruebas
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

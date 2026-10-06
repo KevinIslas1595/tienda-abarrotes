@@ -333,6 +333,62 @@ await paso('categorías', async () => {
   await captura('13-mas');
 });
 
+// ---------- 5b. Escáner y avisos encima de las ventanas ----------
+// Lo que está detrás de una ventana abierta con showModal() no se puede tocar:
+// se comprueba que lo de hasta arriba en la pantalla sea el escáner / el aviso.
+const loDeArriba = (selector) =>
+  page.evaluate((sel) => {
+    const el = document.querySelector(sel);
+    if (!el) return false;
+    const r = el.getBoundingClientRect();
+    return Boolean(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)?.closest(sel));
+  }, selector);
+
+await paso('escáner encima de «Nuevo producto»', async () => {
+  await irA('inventario');
+  await page.click('[data-accion="nuevo"]');
+  await dialogo().locator('[data-accion="escanear-codigo"]').click();
+  await page.locator('dialog.escaner[open]').waitFor();
+  ok('el escáner se ve encima de la ventana', await loDeArriba('dialog.escaner .escaner-botones'));
+  await page.click('dialog.escaner [data-accion="teclear"]');
+  await page.fill('dialog.escaner input[name="codigo"]', '7509999000017');
+  await page.click('dialog.escaner .escaner-manual button[type="submit"]');
+  await page.locator('dialog.escaner').waitFor({ state: 'detached' });
+  ok('el código llegó al formulario', (await dialogo().textContent()).includes('7509999000017'));
+});
+
+await paso('aviso de error encima de la ventana', async () => {
+  await dialogo().locator('input[name="nombre"]').fill('');
+  await dialogo().locator('button[type="submit"]').last().click();
+  await aviso('Escribe el nombre').waitFor();
+  ok('el aviso se ve encima de la ventana', await loDeArriba('#avisos .aviso'));
+  ok('el campo queda marcado en rojo', (await dialogo().locator('input[name="nombre"]').getAttribute('aria-invalid')) === 'true');
+  await dialogo().locator('[data-cerrar]').first().click();
+});
+
+await paso('la cámara se apaga al cambiar de pantalla', async () => {
+  await irA('cobrar');
+  await page.click('[data-accion="escanear"]');
+  await page.locator('dialog.escaner[open]').waitFor();
+  await page.evaluate(() => (location.hash = '#/ventas'));
+  await page.locator('dialog.escaner').waitFor({ state: 'detached', timeout: 3000 });
+  ok('escáner cerrado al salir de la pantalla', true);
+});
+
+await paso('respaldo completo y restaurar', async () => {
+  await irA('mas');
+  const [descarga] = await Promise.all([page.waitForEvent('download'), page.click('[data-accion="respaldo"]')]);
+  const ruta = join(CAPTURAS, 'respaldo.json');
+  await descarga.saveAs(ruta);
+  const r = JSON.parse(readFileSync(ruta, 'utf8'));
+  ok('respaldo con productos y ventas', r.productos.length >= 88 && r.ventas.length >= 2, `${r.productos.length} productos, ${r.ventas.length} ventas`);
+  ok('dice cuándo fue el último respaldo', (await page.locator('[data-ultimo-respaldo]').textContent()).includes('hoy'));
+  await page.setInputFiles('[data-archivo-respaldo]', ruta);
+  await dialogo().locator('text=Restaurar').last().click();
+  await aviso('Respaldo restaurado').waitFor();
+  ok('respaldo restaurado', true);
+});
+
 // ---------- 6. Sin internet ----------
 await paso('vender sin internet', async () => {
   await ctx.setOffline(true);
@@ -359,6 +415,33 @@ await paso('los datos siguen después de recargar', async () => {
   ok('3 ventas guardadas en la nube', n === 3, `${n}`);
 });
 
+await paso('la cuenta a medias no pasa a otra persona', async () => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await escribirEnCobrar('75007614');
+  ok('hay algo en la cuenta antes de salir', (await page.locator('.item').count()) >= 1);
+  await irA('mas');
+  await page.click('[data-accion="salir"]');
+  await dialogo().locator('text=Cerrar sesión').last().click();
+  await page.click('text=¿Primera vez? Crear cuenta');
+  await page.fill('input[name="correo"]', `otra${Date.now()}@tienda.mx`);
+  await page.fill('input[name="clave"]', CLAVE);
+  await page.fill('input[name="clave2"]', CLAVE);
+  await page.click('[data-enviar]');
+  await dialogo().locator('button', { hasText: 'Empezar vacío' }).click();
+  await irA('cobrar');
+  ok('la otra cuenta empieza con la cuenta vacía', (await page.locator('.item').count()) === 0);
+  // De regreso a la cuenta de prueba (su cuenta a medias sigue ahí).
+  await irA('mas');
+  await page.click('[data-accion="salir"]');
+  await dialogo().locator('text=Cerrar sesión').last().click();
+  await page.fill('input[name="correo"]', CORREO);
+  await page.fill('input[name="clave"]', CLAVE);
+  await page.click('[data-enviar]');
+  await page.locator('.menu-inferior').waitFor();
+  await irA('cobrar');
+  ok('la cuenta a medias regresa con su dueño', (await page.locator('.item').count()) >= 1);
+});
+
 // ---------- 7. Computadora ----------
 await paso('vista de computadora', async () => {
   await page.setViewportSize({ width: 1280, height: 800 });
@@ -374,3 +457,4 @@ console.log('\n' + resultados.join('\n'));
 console.log(`\nErrores en consola: ${errores.length}`);
 errores.slice(0, 20).forEach((e) => console.log(e));
 console.log(`\nCuenta de prueba: ${CORREO}`);
+process.exitCode = resultados.some((r) => r.startsWith('FALLA')) ? 1 : 0;

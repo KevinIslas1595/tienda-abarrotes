@@ -767,7 +767,7 @@ body[data-ruta='cobrar'] .contenido {
 }
 
 .segmentado.chico button {
-  min-height: 34px;
+  min-height: 40px;
   font-size: 0.85rem;
 }
 
@@ -1137,13 +1137,13 @@ dialog.modal[open] {
 }
 
 .item-cant .btn-icono {
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
 }
 
 .item-cant .cant {
   min-width: 42px;
-  height: 38px;
+  height: 42px;
   border: 0;
   background: transparent;
   font-weight: 800;
@@ -1164,8 +1164,8 @@ dialog.modal[open] {
 .item .quitar {
   grid-area: quitar;
   color: var(--texto-suave);
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 42px;
 }
 
 @media (max-width: 520px) {
@@ -1308,14 +1308,25 @@ dialog.modal[open] {
 }
 
 /* ============ Escáner ============ */
-.escaner {
+/* Es un <dialog> a pantalla completa (encima de cualquier otra ventana). */
+dialog.escaner {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
   display: flex;
   flex-direction: column;
   background: #000;
   color: #fff;
+}
+
+dialog.escaner::backdrop {
+  background: #000;
 }
 
 .escaner-cabeza {
@@ -1685,7 +1696,7 @@ dialog.modal[open] {
 }
 
 .margenes .chip {
-  min-height: 34px;
+  min-height: 44px;
   padding: 4px 12px;
   font-size: 0.85rem;
 }
@@ -1730,7 +1741,7 @@ dialog.modal[open] {
 }
 
 .navegar-dia input[type='date'] {
-  min-height: 34px;
+  min-height: 44px;
   padding: 4px 8px;
   width: auto;
   font-size: 0.9rem;
@@ -2086,6 +2097,7 @@ a.fila-opcion:hover {
 
 .login-caja .btn-texto {
   justify-self: center;
+  min-height: 44px;
 }
 
 .login-logo {
@@ -2163,6 +2175,12 @@ a.fila-opcion:hover {
   .tarjetas-resumen.tres small {
     font-size: 0.72rem;
   }
+}
+
+/* Campo con error (lo marca errorEnCampo en util.js). */
+[aria-invalid='true'] {
+  border-color: var(--peligro) !important;
+  box-shadow: 0 0 0 3px var(--peligro-suave);
 }
 
 @media print {

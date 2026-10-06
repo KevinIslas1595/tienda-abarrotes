@@ -12,6 +12,7 @@ import {
   aviso,
   avisoError,
   debounce,
+  errorEnCampo,
 } from '../util.js';
 import { icono } from '../iconos.js';
 import { estado, escuchar, buscarProductos, buscarPorCodigo } from '../estado.js';
@@ -21,16 +22,27 @@ import { abrirFormularioProducto, elegirProducto, pedirCantidadGranel } from './
 
 // ---------- La cuenta (se guarda en el teléfono por si se cierra la app) ----------
 
+// Cada cuenta tiene su propia cuenta guardada: si otra persona entra en el
+// mismo aparato, no ve la cuenta a medias de la anterior.
 let carrito = [];
-try {
-  carrito = JSON.parse(localStorage.getItem('carrito') || '[]');
-} catch {
-  carrito = [];
+let duenoCarrito;
+const claveCarrito = () => `carrito:${estado.usuario?.uid ?? ''}`;
+
+function cargarCarrito() {
+  const uid = estado.usuario?.uid ?? null;
+  if (uid === duenoCarrito) return;
+  duenoCarrito = uid;
+  try {
+    localStorage.removeItem('carrito'); // clave de la versión anterior (sin cuenta)
+    carrito = JSON.parse(localStorage.getItem(claveCarrito()) || '[]');
+  } catch {
+    carrito = [];
+  }
 }
 
 const guardarCarrito = () => {
   try {
-    localStorage.setItem('carrito', JSON.stringify(carrito));
+    localStorage.setItem(claveCarrito(), JSON.stringify(carrito));
   } catch {
     /* sin espacio: no pasa nada */
   }
@@ -65,6 +77,7 @@ function agregarAlCarrito(p, cantidad = 1) {
 }
 
 export function montar(contenedor) {
+  cargarCarrito();
   contenedor.innerHTML = `
     <section class="vista vista-cobrar">
       <div class="cobrar-buscar">
@@ -264,8 +277,7 @@ export function montar(contenedor) {
       const precio = leerNumero(form.precio.value);
       const cantidad = leerNumero(form.cantidad.value);
       if (!(precio > 0)) {
-        avisoError('Escribe el precio.');
-        form.precio.focus();
+        errorEnCampo(form.precio, 'Escribe el precio.');
         return;
       }
       const costo = leerNumero(form.costo.value);

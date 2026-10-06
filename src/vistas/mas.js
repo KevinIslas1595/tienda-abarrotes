@@ -19,6 +19,8 @@ import {
   leerCSV,
   descargar,
   diaISO,
+  leerLocal,
+  guardarLocal,
 } from '../util.js';
 import { icono } from '../iconos.js';
 import { estado, escuchar, categorias, variantesCodigo } from '../estado.js';
@@ -28,6 +30,8 @@ import {
   cambiarCategoriaDe,
   escucharMovimientos,
   hayPendientes,
+  leerRespaldo,
+  restaurarRespaldo,
 } from '../datos.js';
 import { CATALOGO, FECHA_PRECIOS } from '../catalogo-inicial.js';
 import { URL_APK, VERSION } from '../config.js';
@@ -38,6 +42,14 @@ export const instalacion = { evento: null };
 const esIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
 const enApp = () => Boolean(window.Capacitor);
 const instalada = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+
+function textoUltimoRespaldo() {
+  const ts = Number(leerLocal('ultimoRespaldo', 0));
+  if (!ts) return 'Todavía no haces ninguno en este aparato. Hazlo cada semana.';
+  const dias = Math.floor((Date.now() - ts) / 86400000);
+  const cuando = dias === 0 ? 'hoy' : dias === 1 ? 'ayer' : `hace ${dias} días`;
+  return `Último respaldo: ${cuando}${dias >= 7 ? ' — ya toca otro' : ''}`;
+}
 
 // ---------- Catálogo inicial ----------
 
@@ -105,6 +117,17 @@ export function montar(contenedor) {
           <span><strong>Subir inventario desde Excel</strong><small>Cambia muchos productos de un jalón (guárdalo como CSV)</small></span>${icono('subir')}
         </button>
         <input type="file" accept=".csv,text/csv" hidden data-archivo />
+      </div>
+
+      <div class="panel">
+        <h3>${icono('nube')} Respaldo</h3>
+        <button type="button" class="fila-opcion" data-accion="respaldo">
+          <span><strong>Descargar respaldo completo</strong><small data-ultimo-respaldo>${textoUltimoRespaldo()}</small></span>${icono('descargar')}
+        </button>
+        <button type="button" class="fila-opcion" data-accion="restaurar">
+          <span><strong>Restaurar un respaldo</strong><small>Vuelve a cargar productos, ventas y cortes desde el archivo</small></span>${icono('subir')}
+        </button>
+        <input type="file" accept=".json,application/json" hidden data-archivo-respaldo />
       </div>
 
       <div class="panel">
@@ -354,6 +377,41 @@ export function montar(contenedor) {
     dlg.addEventListener('close', quitar);
   }
 
+  // ---------- Respaldo ----------
+
+  async function respaldar() {
+    aviso('Preparando el respaldo…', 'info');
+    try {
+      const datos = await leerRespaldo();
+      await descargar(`respaldo-tienda-${diaISO()}.json`, JSON.stringify(datos), 'application/json');
+      guardarLocal('ultimoRespaldo', String(Date.now()));
+      const el = vista.querySelector('[data-ultimo-respaldo]');
+      if (el) el.textContent = textoUltimoRespaldo();
+      aviso(`Respaldo listo: ${datos.productos.length} productos y ${datos.ventas.length} ventas. Guárdalo en Drive o mándatelo por WhatsApp.`, 'ok', { ms: 6000 });
+    } catch (e) {
+      console.error(e);
+      avisoError('No se pudo hacer el respaldo. Revisa tu internet y vuelve a intentar.');
+    }
+  }
+
+  async function restaurar(texto) {
+    let datos;
+    try {
+      datos = JSON.parse(texto);
+      if (datos?.app !== 'mi-tienda') throw new Error();
+    } catch {
+      avisoError('Ese archivo no es un respaldo de Mi Tienda.');
+      return;
+    }
+    const ok = await confirmar(
+      `Respaldo del ${fechaHora(Date.parse(datos.fecha))}: ${datos.productos?.length ?? 0} productos y ${datos.ventas?.length ?? 0} ventas. Lo que tengas ahora con los mismos datos se reemplaza por lo del respaldo.`,
+      { titulo: '¿Restaurar respaldo?', si: 'Restaurar', peligro: true },
+    );
+    if (!ok) return;
+    await restaurarRespaldo(datos);
+    aviso('Respaldo restaurado.');
+  }
+
   // ---------- Excel ----------
 
   const COLUMNAS = ['id', 'nombre', 'codigos', 'categoria', 'unidad', 'costo', 'precio', 'existencia', 'minimo', 'boton_rapido'];
@@ -503,6 +561,8 @@ export function montar(contenedor) {
     if (accion === 'categorias') administrarCategorias();
     if (accion === 'historial') historial();
     if (accion === 'exportar') exportar();
+    if (accion === 'respaldo') respaldar();
+    if (accion === 'restaurar') vista.querySelector('[data-archivo-respaldo]').click();
     if (accion === 'importar') vista.querySelector('[data-archivo]').click();
     if (accion === 'instalar') instalar();
     if (accion === 'catalogo') {
@@ -524,7 +584,13 @@ export function montar(contenedor) {
     }
   });
 
-  vista.addEventListener('change', (e) => {
+  vista.addEventListener('change', async (e) => {
+    if (e.target.matches('[data-archivo-respaldo]')) {
+      const archivo = e.target.files?.[0];
+      e.target.value = '';
+      if (archivo) restaurar(await archivo.text());
+      return;
+    }
     if (!e.target.matches('[data-archivo]')) return;
     const archivo = e.target.files?.[0];
     e.target.value = '';

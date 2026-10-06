@@ -58,8 +58,11 @@ function mensajeErrorCamara(e) {
 // Devuelve una promesa con el código (o null si se cerró con "Listo"/X).
 export function abrirEscaner({ titulo = 'Escanear código', continuo = false, alLeer, resumen } = {}) {
   return new Promise((resolve) => {
-    const capa = document.createElement('div');
+    // Es un <dialog> con showModal() para quedar encima de cualquier otra
+    // ventana abierta (p. ej. "Nuevo producto"); un <div> quedaría debajo.
+    const capa = document.createElement('dialog');
     capa.className = 'escaner';
+    capa.setAttribute('aria-label', titulo);
     capa.innerHTML = `
       <div class="escaner-cabeza">
         <strong>${esc(titulo)}</strong>
@@ -84,6 +87,7 @@ export function abrirEscaner({ titulo = 'Escanear código', continuo = false, al
         ${resumen ? '<div class="escaner-resumen"></div>' : ''}
       </div>`;
     document.body.append(capa);
+    capa.showModal();
     document.body.classList.add('sin-scroll');
 
     const video = capa.querySelector('video');
@@ -110,16 +114,29 @@ export function abrirEscaner({ titulo = 'Escanear código', continuo = false, al
       terminado = true;
       activo = false;
       stream?.getTracks().forEach((t) => t.stop());
+      if (capa.open) capa.close();
       capa.remove();
       document.body.classList.remove('sin-scroll');
-      window.removeEventListener('keydown', teclaEsc);
+      window.removeEventListener('hashchange', alSalir);
+      window.removeEventListener('popstate', alSalir);
+      document.removeEventListener('visibilitychange', alOcultar);
       resolve(codigo);
     }
 
-    const teclaEsc = (e) => {
-      if (e.key === 'Escape') cerrar();
+    // Esc (o el botón Atrás en algunos teléfonos) cierra la cámara.
+    capa.addEventListener('cancel', (e) => {
+      e.preventDefault();
+      cerrar();
+    });
+    // Si la persona cambia de pantalla o manda la app al fondo, se apaga la
+    // cámara: no debe quedarse encendida sin que se vea.
+    const alSalir = () => cerrar();
+    const alOcultar = () => {
+      if (document.hidden) cerrar();
     };
-    window.addEventListener('keydown', teclaEsc);
+    window.addEventListener('hashchange', alSalir);
+    window.addEventListener('popstate', alSalir);
+    document.addEventListener('visibilitychange', alOcultar);
 
     function recibir(codigo) {
       codigo = String(codigo).trim();

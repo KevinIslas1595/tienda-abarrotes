@@ -14,6 +14,9 @@ import {
   pedirDato,
   aviso,
   avisoError,
+  errorEnCampo,
+  leerLocal,
+  guardarLocal,
 } from '../util.js';
 import { icono } from '../iconos.js';
 import { estado, categorias, buscarProductos, buscarPorCodigo, variantesCodigo } from '../estado.js';
@@ -50,7 +53,7 @@ export function abrirFormularioProducto({ producto = null, codigo = '', nombre =
   const p = producto ?? {
     nombre,
     codigos: codigo ? [String(codigo)] : [],
-    categoria: localStorage.getItem('ultimaCategoria') || 'Otros',
+    categoria: leerLocal('ultimaCategoria', 'Otros'),
     unidad: 'pza',
     costo: '',
     precio: '',
@@ -255,8 +258,7 @@ export function abrirFormularioProducto({ producto = null, codigo = '', nombre =
     if (margen) {
       const costo = leerNumero(form.costo.value);
       if (!(costo > 0)) {
-        avisoError('Primero escribe el costo.');
-        form.costo.focus();
+        errorEnCampo(form.costo, 'Primero escribe el costo.');
         return;
       }
       form.precio.value = redondearA50(costo * (1 + Number(margen.dataset.margen) / 100));
@@ -294,24 +296,21 @@ export function abrirFormularioProducto({ producto = null, codigo = '', nombre =
     const stock = leerNumero(form.stock.value);
     const minimo = leerNumero(form.minimo.value);
     if (!nombreFinal) {
-      avisoError('Escribe el nombre del producto.');
-      form.nombre.focus();
+      errorEnCampo(form.nombre, 'Escribe el nombre del producto.');
       return;
     }
     if (!(precio >= 0) || form.precio.value.trim() === '') {
-      avisoError('Escribe el precio de venta.');
-      form.precio.focus();
+      errorEnCampo(form.precio, 'Escribe el precio de venta.');
       return;
     }
     if (form.costo.value.trim() !== '' && !(costo >= 0)) {
-      avisoError('El costo no es un número válido.');
-      form.costo.focus();
+      errorEnCampo(form.costo, 'El costo no es un número válido.');
       return;
     }
     const pendiente = form.nuevoCodigo.value.trim();
     if (pendiente) agregarCodigoDesde(pendiente);
     const categoria = form.categoria.value === '__nueva' ? 'Otros' : form.categoria.value;
-    localStorage.setItem('ultimaCategoria', categoria);
+    guardarLocal('ultimaCategoria', categoria);
     const datos = {
       id: producto?.id,
       nombre: nombreFinal,
@@ -518,8 +517,7 @@ export async function abrirEntrada(productoInicial = null) {
       const costo = leerNumero(form.costo.value);
       const precio = leerNumero(form.precio.value);
       if (!(cantidad > 0)) {
-        avisoError('Escribe cuántos llegaron.');
-        form.cantidad.focus();
+        errorEnCampo(form.cantidad, 'Escribe cuántos llegaron.');
         return;
       }
       registrarEntrada({

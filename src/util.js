@@ -86,8 +86,11 @@ export function aviso(mensaje, tipo = 'ok', { ms = 2800, boton, alTocar } = {}) 
     cont.id = 'avisos';
     cont.setAttribute('role', 'status');
     cont.setAttribute('aria-live', 'polite');
-    document.body.append(cont);
   }
+  // Una ventana abierta con showModal() tapa todo lo demás, así que los avisos
+  // van dentro de la ventana de hasta arriba (o en la página si no hay ninguna).
+  const destino = [...document.querySelectorAll('dialog[open]')].at(-1) ?? document.body;
+  if (cont.parentElement !== destino) destino.append(cont);
   const el = document.createElement('div');
   el.className = `aviso aviso-${tipo}`;
   el.innerHTML = `<span>${esc(mensaje)}</span>`;
@@ -112,6 +115,31 @@ export function aviso(mensaje, tipo = 'ok', { ms = 2800, boton, alTocar } = {}) 
 }
 
 export const avisoError = (mensaje) => aviso(mensaje, 'error', { ms: 5000 });
+
+// Error en un campo de formulario: avisa, lo marca en rojo y le pone el cursor.
+export function errorEnCampo(campo, mensaje) {
+  avisoError(mensaje);
+  campo.setAttribute('aria-invalid', 'true');
+  campo.addEventListener('input', () => campo.removeAttribute('aria-invalid'), { once: true });
+  campo.focus();
+}
+
+// localStorage puede fallar (modo privado, sin espacio): nunca debe tumbar la app.
+export function leerLocal(clave, porDefecto = null) {
+  try {
+    return localStorage.getItem(clave) ?? porDefecto;
+  } catch {
+    return porDefecto;
+  }
+}
+
+export function guardarLocal(clave, valor) {
+  try {
+    localStorage.setItem(clave, valor);
+  } catch {
+    /* sin espacio o bloqueado: no pasa nada */
+  }
+}
 
 // ---------- Ventanas (diálogos) ----------
 
@@ -205,8 +233,13 @@ export function pedirDato({ titulo, etiqueta, valor = '', tipo = 'text', ayuda =
 
 // ---------- CSV (se abre en Excel) ----------
 
+// Un texto que empieza con = + - @ Excel lo toma como fórmula: se le pone un
+// apóstrofo delante para que se vea tal cual (al importar se le quita).
+const PARECE_FORMULA = /^[=+\-@\t\r]/;
+
 function celdaCSV(v) {
-  const s = v == null ? '' : String(v);
+  let s = v == null ? '' : String(v);
+  if (typeof v === 'string' && PARECE_FORMULA.test(s) && !Number.isFinite(Number(s))) s = "'" + s;
   return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
@@ -247,7 +280,9 @@ export function leerCSV(texto) {
     fila.push(celda);
     filas.push(fila);
   }
-  return filas.filter((f) => f.some((c) => c.trim() !== ''));
+  return filas
+    .filter((f) => f.some((c) => c.trim() !== ''))
+    .map((f) => f.map((c) => (c.startsWith("'") && PARECE_FORMULA.test(c.slice(1)) ? c.slice(1) : c)));
 }
 
 export async function descargar(nombre, contenido, tipo = 'text/csv;charset=utf-8') {

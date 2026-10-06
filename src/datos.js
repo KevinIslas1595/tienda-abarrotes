@@ -23,6 +23,8 @@ import {
   deleteDoc,
   increment,
   arrayUnion,
+  getDoc,
+  getDocs,
 } from 'firebase/firestore';
 import { db } from './firebase.js';
 import { redondear, diaISO, horaHM, avisoError, traducirError } from './util.js';
@@ -311,4 +313,33 @@ export function escucharMovimientos(cuantos, cb) {
     (snap) => cb(snap.docs.map((d) => ({ ...d.data(), id: d.id }))),
     errorAlLeer,
   );
+}
+
+// ---------- Respaldo completo ----------
+
+// Firebase gratis no guarda copias de seguridad: este archivo es tu copia.
+const COLECCIONES_RESPALDO = ['productos', 'ventas', 'dias', 'movimientos'];
+
+export async function leerRespaldo() {
+  const tienda = await getDoc(refTienda());
+  const respaldo = { app: 'mi-tienda', version: 1, fecha: new Date().toISOString(), tienda: tienda.data() ?? null };
+  for (const nombre of COLECCIONES_RESPALDO) {
+    const snap = await getDocs(col(nombre));
+    respaldo[nombre] = snap.docs.map((d) => ({ ...d.data(), _id: d.id }));
+  }
+  return respaldo;
+}
+
+// Vuelve a escribir todo lo del respaldo (con los mismos identificadores).
+// Lo que se agregó después del respaldo no se borra.
+export function restaurarRespaldo(respaldo) {
+  if (respaldo?.app !== 'mi-tienda') throw new Error('El archivo no es un respaldo de Mi Tienda.');
+  const ops = [];
+  if (respaldo.tienda) ops.push((lote) => lote.set(refTienda(), respaldo.tienda));
+  for (const nombre of COLECCIONES_RESPALDO) {
+    for (const { _id, ...datos } of respaldo[nombre] ?? []) {
+      if (_id) ops.push((lote) => lote.set(ref(nombre, _id), datos));
+    }
+  }
+  return enLotes(ops, 'No se pudo restaurar el respaldo');
 }
